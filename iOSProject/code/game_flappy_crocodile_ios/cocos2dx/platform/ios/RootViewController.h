@@ -5,7 +5,7 @@
 #import <StoreKit/StoreKit.h>
 #import "Chartboost.h"
 #import <RevMobAds/RevMobAds.h>
-
+#import "GADInterstitial.h"
 #define SK_NO_TAPJOY
 
 #ifndef SK_NO_PLAYHEAVEN
@@ -80,6 +80,7 @@ MFMailComposeViewControllerDelegate
 #endif
 @property (nonatomic, retain) NSArray* products;
 @property (nonatomic, retain) SKProductsRequest * products_request;
+@property (strong, nonatomic) GADInterstitial *interstitial;
 #ifndef SK_NO_TAPJOY
 @property (nonatomic, retain) TapJoyHandler* TapJoy;
 #endif

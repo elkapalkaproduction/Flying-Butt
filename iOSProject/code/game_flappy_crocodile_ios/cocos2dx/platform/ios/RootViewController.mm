@@ -5,6 +5,7 @@
 #import "Flurry.h"
 #import "TapJoyHandler.h"
 #import "LogoViewController.h"
+#import "GADInterstitial.h"
 
 #ifndef SK_PAID
 #ifdef SK_NO_ADMOB
@@ -172,10 +173,10 @@ void ios_share_email(const sk::game_services::email_info& info)
 void ios_show_video_ad( bool reward )
 {
 #ifndef SK_NO_ADCOLONY
-	if (sk::game_services::is_interstitial_shown())
-	{
-		return;
-	}
+//	if (sk::game_services::is_interstitial_shown())
+//	{
+//		return;
+//	}
 	[vc adc:reward];
 #endif
 }
@@ -346,7 +347,10 @@ void ios_tapjoy_show_interstitial()
 }
 #endif
 
+@interface RootViewController ()
+@property (assign, nonatomic) BOOL firstLaunch;
 
+@end
 
 @implementation RootViewController
 
@@ -770,7 +774,7 @@ void ios_tapjoy_show_interstitial()
     self.TapJoy = [TapJoyHandler create:self];
     [self.TapJoy connect];
 #endif
-    
+    [self interstitial];
 	[RevMobAds startSessionWithAppID:[NSString stringWithUTF8String:sk::game_services::get_revmob_app_id()]];
 #ifndef SK_NO_ADCOLONY
     NSArray* zoneIDs = [[NSArray alloc] initWithObjects: [NSString stringWithUTF8String:sk::game_services::get_adcolony_zone()], nil];
@@ -802,7 +806,7 @@ void ios_tapjoy_show_interstitial()
     [request send];
 #endif
 	
-	
+	[self performSelector:@selector(adc:) withObject:nil afterDelay:1.0];
 	sk::game_services::on_launch();
 }
 
@@ -1240,8 +1244,11 @@ void ios_tapjoy_show_interstitial()
     [super viewDidAppear:animated];
 }
 -(void)viewWillAppear:(BOOL)animated{
+    if (!self.firstLaunch) {
+         self.firstLaunch = YES;
     logo = [[LogoViewController alloc] initWithNibName:nil bundle:nil];
     [self.view addSubview:logo.view];
+    }
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(startCocos) name:@"startCocos" object:nil];
     [super viewWillAppear:animated];
 }
@@ -1316,9 +1323,21 @@ void ios_tapjoy_show_interstitial()
     // rewardFlag is not used
     
     sk::game_services::log_event("adcolony_video_requested");
-    [AdColony playVideoAdForZone:[NSString stringWithUTF8String:sk::game_services::get_adcolony_zone()] withDelegate:self withV4VCPrePopup:YES andV4VCPostPopup:YES ];
+    if ([AdColony zoneStatusForZone:[NSString stringWithUTF8String:sk::game_services::get_adcolony_zone()]] == ADCOLONY_ZONE_STATUS_ACTIVE) {
+        [AdColony playVideoAdForZone:[NSString stringWithUTF8String:sk::game_services::get_adcolony_zone()] withDelegate:self withV4VCPrePopup:YES andV4VCPostPopup:YES ];
+    } else {
+        [self.interstitial presentFromRootViewController:self];
+    }
 }
-
+- (GADInterstitial *)interstitial {
+    if (!_interstitial) {
+        _interstitial = [[GADInterstitial alloc] init];
+        _interstitial.adUnitID = @"ca-app-pub-1480731978958686/5075127796";
+        [_interstitial loadRequest:[GADRequest request]];
+    }
+    
+    return _interstitial;
+}
 #pragma mark - ADColonyDelegate
 
 /**

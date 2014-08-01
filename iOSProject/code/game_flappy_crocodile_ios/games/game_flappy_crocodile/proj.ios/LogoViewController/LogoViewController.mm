@@ -59,6 +59,8 @@
     
 
     [super viewDidLoad];
+    AppController *rt = (AppController *)[[UIApplication sharedApplication] delegate];
+    [rt.viewController interstitial];
 	// Do any additional setup after loading the view, typically from a nib.
 }
 -(void)push{
